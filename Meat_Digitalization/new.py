@@ -6,7 +6,6 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import io
 import json
-
 # --- Проверка наличия 'openpyxl' ---
 try:
     import openpyxl
@@ -18,6 +17,7 @@ except ImportError:
 # ---------------------------
 # Настройки страницы и путей к данным
 # ---------------------------
+
 st.set_page_config(page_title="Платформа Жая", layout="wide")
 DATA_DIR = Path(__file__).parent
 MEAT_DATA_XLSX = DATA_DIR / "meat_data.xlsx"
@@ -134,7 +134,7 @@ def get_ph_model(time_h, ph_obs):
 # ---------------------------
 st.sidebar.title("Меню платформы")
 page_options = ["Главная", "Процесс производства Жая", "Регрессионные модели качества", "Моделирование pH",
-                "Анализ с экстрактом облепихи", "Исследование данных"]
+                "Анализ с экстрактом облепихи", "Исследование данных","Ввод новых данных"]
 page = st.sidebar.radio("Выберите раздел:", page_options)
 
 if 'selected_product_id' not in st.session_state: st.session_state.selected_product_id = None

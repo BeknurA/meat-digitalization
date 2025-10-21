@@ -17,10 +17,13 @@ from sklearn.preprocessing import StandardScaler
 import joblib
 import base64
 import time
+import os
 
 # ---------------------------
 # Конфигурация файлов/папок
 # ---------------------------
+MEAT_XLSX = "meat_data.xlsx"
+SHEET_NAME = "T6"
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
@@ -60,7 +63,7 @@ LANG = {
         "title": "Платформа Жая",
         "version_note": "Версия: интегрированная",
         "menu": ["Главная", "Процесс производства Жая", "Регрессионные модели качества",
-                 "Моделирование pH", "Анализ с экстрактом облепихи", "Исследование данных", "История / DB", "ML: Train / Predict"],
+                 "Моделирование pH", "Анализ с экстрактом облепихи", "Исследование данных", "История / DB", "ML: Train / Predict", "Ввод новых данных"],
         "db_reset_confirm": "Вы уверены, что хотите удалить все измерения?",
         "train_button": "Обучить модель",
         "predict_button": "Сделать прогноз",
@@ -91,6 +94,30 @@ LANG = {
 lang_choice = st.sidebar.selectbox("Язык / Тіл / Language", options=["ru", "en", "kk"], index=0)
 L = LANG[lang_choice]
 
+#Ввод новых данных в Excel с проверкой наличия файла и листа
+def safe_read_excel(path, sheet_name):
+    if os.path.exists(path):
+        try:
+            df = pd.read_excel(path, sheet_name=sheet_name)
+        except ValueError:
+            # Если листа нет — создаём новый
+            st.warning(f"⚠️ Лист '{sheet_name}' не найден. Создаётся новый.")
+            df = pd.DataFrame(columns=["BatchID", "mass_kg", "T_initial_C", "Salt_pct", "Moisture_pct", "StarterCFU", "Extract_pct"])
+            with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+                df.to_excel(writer, index=False, sheet_name=sheet_name)
+        return df
+    else:
+        st.warning(f"⚠️ Файл {path} не найден. Создаётся новый.")
+        df = pd.DataFrame(columns=["BatchID", "mass_kg", "T_initial_C", "Salt_pct", "Moisture_pct", "StarterCFU", "Extract_pct"])
+        df.to_excel(path, index=False, sheet_name=sheet_name)
+        return df
+
+# --- Добавление новой строки ---
+def append_row_excel(path, sheet_name, new_row):
+    df = safe_read_excel(path, sheet_name)
+    df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+    with pd.ExcelWriter(path, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+        df.to_excel(writer, index=False, sheet_name=sheet_name)
 # ---------------------------
 # DB Utility (sqlite, simple)
 # ---------------------------
@@ -673,6 +700,7 @@ elif page == L["menu"][6]:
         fig2 = px.line(df_hist.sort_values('created_at'), x='created_at', y='ph', title="pH over time", markers=True)
         fig2.update_yaxes(range=[0,8])
         st.plotly_chart(fig2, use_container_width=True)
+# =====================================================================
 
 # ---------------------------
 # PAGE: ML: Train / Predict (new, preserves train/predict behavior)
@@ -746,7 +774,68 @@ elif page == L["menu"][7]:
                                 insert_measurement(str(r.get('sample_name','sample')), float(r.get('predicted_pH', np.nan)), compute_score_from_ph(float(r.get('predicted_pH', np.nan))), notes="predicted")
                                 saved += 1
                             st.success(f"Сохранено {saved} записей в БД")
+# СТРАНИЦА: ВВОД НОВЫХ ДАННЫХ
+# =====================================================================
+elif page == L["menu"][8]:
+    st.title("➕ Ввод новых данных о продукции")
+    st.markdown(f"### Добавление нового производственного цикла в базу данных ({MEAT_XLSX}, лист {SHEET_NAME})")
 
+    # Загружаем текущие данные
+    df_meat = safe_read_excel(MEAT_XLSX, SHEET_NAME)
+
+    # Проверка наличия колонки BatchID
+    if "BatchID" not in df_meat.columns:
+        st.error("❌ В листе T6 нет колонки 'BatchID'. Проверь структуру таблицы.")
+        st.stop()
+
+    # Определяем следующий BatchID
+    if len(df_meat) > 0 and df_meat["BatchID"].astype(str).str.match(r"^M\d+$").any():
+        last_id_str = df_meat["BatchID"].dropna().astype(str).iloc[-1]
+        try:
+            last_num = int(last_id_str[1:])
+            next_id = f"M{last_num + 1}"
+        except:
+            next_id = "M1"
+    else:
+        next_id = "M1"
+
+    with st.form(key='batch_entry_form'):
+        st.subheader("Введите параметры нового производственного цикла")
+
+        st.text_input("Batch ID (автоматически)", value=next_id, disabled=True)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            mass_kg = st.number_input("Масса партии (кг)", min_value=1.0, value=100.0, step=1.0)
+            T_initial_C = st.number_input("Начальная температура (°C)", min_value=-10.0, value=4.0, step=0.1)
+            Salt_pct = st.number_input("Содержание соли (%)", min_value=0.0, value=5.0, step=0.1)
+        with col2:
+            Moisture_pct = st.number_input("Влажность (%)", min_value=0.0, value=75.0, step=0.1)
+            StarterCFU = st.number_input("Стартерная культура (КОЕ/г)", min_value=0, value=1000000, step=10000)
+            Extract_pct = st.number_input("Концентрация экстракта (%)", min_value=0.0, value=3.0, step=0.1)
+
+        submitted = st.form_submit_button("💾 Сохранить данные")
+
+        if submitted:
+            new_row = {
+                "BatchID": next_id,
+                "mass_kg": mass_kg,
+                "T_initial_C": T_initial_C,
+                "Salt_pct": Salt_pct,
+                "Moisture_pct": Moisture_pct,
+                "StarterCFU": StarterCFU,
+                "Extract_pct": Extract_pct
+            }
+            try:
+                append_row_excel(MEAT_XLSX, SHEET_NAME, new_row)
+                st.success(f"✅ Новая партия '{next_id}' успешно добавлена в лист '{SHEET_NAME}'!")
+                st.cache_data.clear()
+            except Exception as e:
+                st.error(f"❌ Ошибка при записи в файл: {e}")
+
+    st.markdown("---")
+    st.subheader("📊 Текущие данные")
+    st.dataframe(safe_read_excel(MEAT_XLSX, SHEET_NAME), use_container_width=True)
 # ---------------------------
 # Footer / small note
 # ---------------------------
