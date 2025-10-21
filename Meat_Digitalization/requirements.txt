@@ -1,6 +1,8 @@
-streamlit
+streamlit>=1.20.0
 pandas
 numpy
-matplotlib
-openpyxl
+scikit-learn
+joblib
 plotly
+openpyxl
+matplotlib
