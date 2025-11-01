@@ -1,6 +1,4 @@
-# app_merged.py — Объединенная версия по вашим инструкциям.
-# Дизайн, Главная, Процесс, Регрессии — из app1.py
-# pH, Экстракт, Исследование, ML, Ввод данных — из app.py
+
 
 import streamlit as st
 import pandas as pd
@@ -12,16 +10,16 @@ import json
 import sqlite3
 from datetime import datetime
 import plotly.express as px
-import plotly.graph_objects as go  # Взято из app1.py
+import plotly.graph_objects as go 
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 import joblib
 import base64
 import time
 import os
-
+from dict import LANG
 # ---------------------------
-# Конфигурация файлов/папок (из app1.py)
+# Конфигурация файлов/папок
 # ---------------------------
 # Используйте фиктивные файлы для демонстрации, если реальные не загружены
 MEAT_XLSX = "meat_data.xlsx"
@@ -40,7 +38,7 @@ PRODUCTS_CSV = BASE_DIR / "Products.csv"
 SAMPLES_CSV = BASE_DIR / "Samples.csv"
 MEASUREMENTS_CSV = BASE_DIR / "Measurements.csv"
 
-# Создание фиктивных данных, если их нет (из app1.py)
+# Создание фиктивных данных, если их нет
 if not OPYTY_XLSX.exists():
     temp_df = pd.DataFrame({
         'Time_h': [0, 1, 2, 4, 8, 12, 24, 48, 72, 96, 120, 144],
@@ -65,12 +63,12 @@ if not MEAT_DATA_XLSX.exists():
         temp_df_meat.to_excel(writer, sheet_name=SHEET_NAME, index=False)
 
 # ---------------------------
-# Установки страницы (из app1.py)
+# Установки страницы 
 # ---------------------------
 st.set_page_config(page_title="Платформа Жая — расширенная", layout="wide")
 
 # =================================================================
-# 🎨 ENHANCED DESIGN AND ANIMATION - DARK THEME (ИЗ app1.py)
+# 🎨 ENHANCED DESIGN AND ANIMATION - DARK THEME 
 # =================================================================
 st.markdown("""
 <style>
@@ -79,7 +77,7 @@ st.markdown("""
     background-color: #111111; /* DARK/Black background */
     color: #f0f0f0; /* Light text for general readability */
 }
-/* ... (весь остальной CSS код из app1.py) ... */
+/* ... (весь остальной CSS код ) ... */
 /* Ensure all text within containers is readable */
 .st-emotion-cache-1n76c1k, [data-testid="stSidebar"] div, div[data-testid="stForm"] > div > label > div {
     color: #f0f0f0 !important;
@@ -186,54 +184,61 @@ h1, h2, h3, h4, h5, h6, .stMarkdown, .stText {
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------
-# Мультиязычность (из app1.py - самая полная)
-# ---------------------------
-LANG = {
-    "ru": {
-        "title": "Платформа Жая",
-        "full_title": "Цифровая платформа для мясного деликатеса Жая",  # Исправленный титул
-        "version_note": "Версия: объединенная",
-        "menu": ["Главная", "Процесс производства Жая", "Регрессионные модели качества",
-                 "Моделирование pH", "Анализ с экстрактом облепихи", "Исследование данных", "История / DB",
-                 "ML: Train / Predict", "Ввод новых данных"],
-        "db_reset_confirm": "Вы уверены, что хотите удалить все измерения?",
-        "train_button": "Обучить модель",
-        "predict_button": "Сделать прогноз",
-        "upload_csv": "Загрузить CSV/Excel",
-    },
-    "en": {
-        "title": "Meat Digitalization Platform",
-        "full_title": "Digital Platform for the Meat Delicacy 'Zhaya'",
-        "version_note": "Version: merged",
-        "menu": ["Home", "Production process", "Regression quality models",
-                 "pH Modeling", "Sea-buckthorn extract analysis", "Data exploration", "History / DB",
-                 "ML: Train / Predict", "Input New Data"],
-        "db_reset_confirm": "Are you sure you want to delete all measurements?",
-        "train_button": "Train model",
-        "predict_button": "Predict",
-        "upload_csv": "Upload CSV/Excel",
-    },
-    "kk": {
-        "title": "Жая платформасы",
-        "full_title": "«Жая» ет деликатесіне арналған цифрлық платформа",
-        "version_note": "Нұсқа: біріктірілген",
-        "menu": ["Басты", "Өндіріс процесі", "Сапа регрессиялық модельдері",
-                 "pH моделдеу", "Құлпынай сығындысы талдауы", "Деректерді зерттеу", "Тарих / DB",
-                 "ML: Үйрету / Болжам", "Жаңа деректер енгізу"],
-        "db_reset_confirm": "Барлық өлшемдерді жойғыңыз келетініне сенімдісіз бе?",
-        "train_button": "Модельді үйрету",
-        "predict_button": "Болжам жасау",
-        "upload_csv": "CSV/Excel жүктеу",
-    }
+
+
+def get_text(key: str, lang: str = "ru") -> str:
+    """
+    Return localized string for `key` in language `lang`.
+    If missing, fallback to key.
+    """
+    try:
+        # LANG айнымалысы lang_dict файлын импорттау арқылы қол жетімді
+        return LANG.get(lang, LANG["ru"]).get(key, key)
+    except Exception:
+        return key
+
+L = LANG
+# Список кодов доступных языков (порядок — как в словаре LANG)
+lang_codes = list(L.keys())
+if not lang_codes:
+    # На случай если LANG пуст — дефолтная защита
+    lang_codes = ["ru"]
+
+# Читаемые имена языков для селектора (если хочешь, можно расширить маппинг)
+_lang_name_map = {
+    "ru": "Русский",
+    "en": "English",
+    "kk": "Қазақша",
+    # добавь другие удобочитаемые имена, если у тебя есть эти коды в LANG
 }
+lang_names = [ _lang_name_map.get(code, code) for code in lang_codes ]
 
-lang_choice = st.sidebar.selectbox("Язык / Тіл / Language", options=["ru", "en", "kk"], index=0)
-L = LANG[lang_choice]
+# Выбираем дефолтный язык (предпочтение — 'ru', иначе первый в списке)
+default_lang = "ru" if "ru" in lang_codes else lang_codes[0]
 
+# Инициализация session_state для сохранения выбора между перезагрузками
+if "lang_choice" not in st.session_state:
+    st.session_state.lang_choice = default_lang
+
+# Sidebar селектор языка (отображаем человекочитаемые имена)
+# Используем index, чтобы выбрать текущий lang_choice корректно
+try:
+    current_index = lang_codes.index(st.session_state.lang_choice)
+except ValueError:
+    current_index = 0
+selected_name = st.sidebar.selectbox("Язык / Language", lang_names, index=current_index)
+
+# Преобразуем обратно имя -> код
+selected_code = lang_codes[lang_names.index(selected_name)]
+st.session_state.lang_choice = selected_code
+
+# Локальная переменная для удобства в остальном коде
+lang_choice = st.session_state.lang_choice
+
+# Пример использования: заголовок в sidebar
 
 # ---------------------------
-# Функции Excel (ИЗ app.py - для совместимости с Page 8)
+# Функции Excel 
 # ---------------------------
 def safe_read_excel(path, sheet_name):
     if os.path.exists(path):
@@ -264,7 +269,7 @@ def append_row_excel(path, sheet_name, new_row):
 
 
 # ---------------------------
-# DB Utility (из app1.py - идентична app.py)
+# DB Utility 
 # ---------------------------
 def get_conn():
     conn = sqlite3.connect(DB_FILE, check_same_thread=False)
@@ -318,7 +323,7 @@ init_db()
 
 
 # ---------------------------
-# ML: (ИЗ app.py - для совместимости с Page 7)
+# ML: 
 # ---------------------------
 class SimplePHModel:
     def __init__(self):
@@ -387,7 +392,7 @@ ph_model = SimplePHModel()
 # ---------------------------
 # Utilities
 # ---------------------------
-# (safe_read_csv из app1.py)
+# (safe_read_csv)
 def safe_read_csv(path: Path):
     if not path.exists():
         return pd.DataFrame()
@@ -407,22 +412,27 @@ def safe_read_csv(path: Path):
     return pd.DataFrame()
 
 
-# (compute_score_from_ph ИЗ app.py - для Page 7)
+
 def compute_score_from_ph(ph_value):
     if ph_value is None or (isinstance(ph_value, float) and np.isnan(ph_value)):
         return None
     return round(max(0.0, 10.0 - abs(ph_value - 6.5)), 2)
 
 
-# (df_to_download_link из app1.py - идентична)
-def df_to_download_link(df, filename="export.csv"):
+# (df_to_download_link )
+def df_to_download_link(df, filename="export.csv", link_text="Скачать"):
+    """
+    Создает HTML-ссылку для скачивания DataFrame в виде CSV-файла.
+    """
     csv = df.to_csv(index=False)
     b64 = base64.b64encode(csv.encode()).decode()
-    return f'<a href="data:file/csv;base64,{b64}" download="{filename}">Скачать {filename}</a>'
+    
+    # Использование нового аргумента link_text
+    return f'<a href="data:file/csv;base64,{b64}" download="{filename}">{link_text}</a>'
 
 
 # ---------------------------
-# Load original data (из app1.py - самая полная)
+# Load original data 
 # ---------------------------
 @st.cache_data
 def load_all_data():
@@ -471,7 +481,7 @@ if df_ph_raw is not None and not df_ph_raw.empty:
 
 
 # ---------------------------
-# Original math functions (из app1.py - для Page 2)
+# Original math functions 
 # ---------------------------
 def calculate_stability(pressure, viscosity):
     p, v = pressure, viscosity
@@ -497,521 +507,594 @@ def get_ph_model(time_h, ph_obs):
 
 
 # ---------------------------
-# UI: Main navigation (из app1.py)
+# UI: Main navigation 
 # ---------------------------
-st.sidebar.markdown("<div class='fade-in'>", unsafe_allow_html=True)
-st.sidebar.title(L["title"])
-st.sidebar.caption(L["version_note"])
+sidebar_container = st.sidebar.container() 
 
-page_options = L["menu"]
-page = st.sidebar.radio("Выберите раздел / Section", page_options, index=0)
-st.sidebar.markdown("</div>", unsafe_allow_html=True)
+# Используем контейнер для вывода статических элементов:
+
+sidebar_container.markdown("<div class='fade-in'>", unsafe_allow_html=True)
+
+# Заголовок и версия в боковом меню
+sidebar_container.title(get_text("title", lang_choice))
+sidebar_container.caption(get_text("version_note", lang_choice))
+
+sidebar_container.markdown("</div>", unsafe_allow_html=True)
+# Формирование пунктов меню
+page_options = [
+    get_text("menu_home", lang_choice),
+    get_text("menu_production_process", lang_choice),
+    get_text("menu_regression_models", lang_choice),
+    get_text("menu_ph_modeling", lang_choice),
+    get_text("menu_seabuckthorn_analysis", lang_choice),
+    get_text("menu_data_exploration", lang_choice),
+    get_text("menu_history_db", lang_choice),
+    get_text("menu_ml_train_predict", lang_choice),
+    get_text("menu_new_data_input", lang_choice),
+]
+
+# Радио-кнопки для выбора страницы
+page = st.sidebar.radio(get_text("select_section", lang_choice), page_options, index=0)
 
 # Session state initialization
-if 'selected_product_id' not in st.session_state: st.session_state.selected_product_id = None
-if 'selected_step' not in st.session_state: st.session_state.selected_step = None
-if 'active_stage_clean' not in st.session_state: st.session_state['active_stage_clean'] = 'priemka'
+if 'selected_product_id' not in st.session_state:
+    st.session_state.selected_product_id = None
+if 'selected_step' not in st.session_state:
+    st.session_state.selected_step = None
+if 'active_stage_clean' not in st.session_state:
+    st.session_state['active_stage_clean'] = 'priemka'
 
 # =================================================================
-# PAGE: Главная (Басты) (ИЗ app1.py)
+# PAGE: Главная / Home
 # =================================================================
-if page == L["menu"][0]:
-    # ... (Код для главной страницы, как в предыдущем ответе - без изменений)
+if page == get_text("menu_home", lang_choice):
+
     st.markdown("<div class='fade-in'>", unsafe_allow_html=True)
-    st.markdown(f'<h1 class="main-title-animation">{L["full_title"]}</h1>', unsafe_allow_html=True)
-    st.subheader("Интеллектуальные решения для оптимизации производства и контроля качества")
-
+    st.markdown(f"<h1 class='main-title-animation'>{get_text('full_title', lang_choice)}</h1>", unsafe_allow_html=True)
+    st.subheader(get_text("home_desc", lang_choice))
     st.markdown("---")
 
-    # 2. Ключевые функции (Метрики)
-    st.markdown("### Ключевые возможности платформы")
+    # 2. Ключевые функции платформы
+    st.markdown(f"### {get_text('home_info', lang_choice)}")
     col_a, col_b, col_c = st.columns(3)
 
     with col_a:
-        st.metric(label="⚙️ Технологические процессы", value="4 Шага контроля", delta="От сырья до упаковки")
-        st.write("Пошаговая карта производства с контрольными параметрами.")
+        st.metric(
+            label="⚙️ " + get_text("menu_production_process", lang_choice),
+            # stage_1: "1. Приемка" -> "1." + "control stages" (если stage_1 - это "1. Приемка")
+            value= get_text("stage_control_suffix", lang_choice),
+            delta=get_text("delta_production", lang_choice)
+        )
+        st.write(get_text("prod_subtitle", lang_choice))
 
     with col_b:
-        st.metric(label="📈 Прогноз Качества (ML)", value="pH и Влажность", delta="На основе параметров засола/сушки")
-        st.write("Регрессионные модели для прогнозирования критических характеристик.")
+        st.metric(
+            label="📈 " + get_text("menu_regression_models", lang_choice),
+            # moisture_title: "Влажность (Moisture)" -> "pH и" + "Moisture"
+            value="pH и " + get_text("moisture_title", lang_choice).split()[0],
+            delta=get_text("delta_regression", lang_choice)
+        )
+        st.write(get_text("regression_subtitle", lang_choice))
 
     with col_c:
-        st.metric(label="🔬 Анализ Эффективности", value="Экстракт Облепихи",
-                  delta="Увеличение стабильности/срока годности")
-        st.write("Исследование влияния натуральных антиоксидантов.")
+        st.metric(
+            label="🔬 " + get_text("menu_seabuckthorn_analysis", lang_choice),
+            value=get_text("seabuckthorn_value", lang_choice),
+            delta=get_text("delta_seabuckthorn", lang_choice)
+        )
+        st.write(get_text("seabuck_desc", lang_choice))
 
     st.markdown("---")
 
-    # 3. ДОПОЛНЕНИЯ ИЗ ОТЧЕТА (Ключевые достижения)
-    st.markdown("### 🏆 Основные научные достижения (Из отчета)")
+    # 3. Основные научные достижения
+    st.markdown(f"### {get_text('scientific_achievements', lang_choice)}") # ИСПРАВЛЕНО
     col1, col2, col3 = st.columns(3)
 
     with col1:
         st.markdown(f"""
         <div class="key-finding-card">
-            <h4>Влагоудерживающая Способность (ВУС)</h4>
-            <div class="small-muted">Рост ВУС при 5% экстракта</div>
+            <h4>{get_text("wac_title", lang_choice)}</h4>
+            <div class="small-muted">{get_text("wac_subtitle", lang_choice)}</div>
             <div class="key-value">75.6%</div>
-            <div class="small-muted">Против 60.2% в контроле.</div>
+            <div class="small-muted">{get_text("wac_note", lang_choice)}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True) # ИСПРАВЛЕНО
 
     with col2:
-        # Из Отчет_по_мясо.docx: "Оптимальные концентрации находятся в пределах 3–5%, при этом для цельномышечной копчёной жая предпочтительно 5%, а для формованного изделия – 3%. В этих условиях достигается баланс между улучшением функционально-технологических свойств"
         st.markdown(f"""
         <div class="key-finding-card">
-            <h4>Срок Годности (Прогноз)</h4>
-            <div class="small-muted">Максимальный срок хранения при 0-5°С</div>
-            <div class="key-value">60 суток</div>
-            <div class="small-muted">На 30 дней дольше стандарта (30 суток).</div>
+            <h4>{get_text("shelf_life_title", lang_choice)}</h4>
+            <div class="small-muted">{get_text("shelf_life_subtitle", lang_choice)}</div>
+            <div class="key-value">60 {get_text("day_in_lang", lang_choice)}</div>
+            <div class="small-muted">{get_text("shelf_life_note", lang_choice)}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True) # ИСПРАВЛЕНО
 
     with col3:
         st.markdown(f"""
         <div class="key-finding-card">
-            <h4>Оптимальная Концентрация</h4>
-            <div class="small-muted">Рекомендованная дозировка экстракта</div>
-            <div class="key-value">3 - 5%</div>
-            <div class="small-muted">Баланс вкуса и стабильности.</div>
+            <h4>{get_text("optimal_conc_title", lang_choice)}</h4>
+            <div class="small-muted">{get_text("optimal_conc_subtitle", lang_choice)}</div>
+            <div class="key-value">3 – 5%</div>
+            <div class="small-muted">{get_text("optimal_conc_note", lang_choice)}</div>
         </div>
-        """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True) # ИСПРАВЛЕНО
 
     st.markdown("---")
 
-    # 4. Динамикалық прогресс бар
-    st.subheader("🧪 Окислительная Стабильность: Снижение Перекисного Числа (ТБЧ)")
+    # 4. Окислительная стабильность
+    st.subheader(get_text("oxidation_stability_title", lang_choice)) # ИСПРАВЛЕНО
     TBC_control = 2.80
     TBC_extract = 0.90
     reduction_pct = round((1 - (TBC_extract / TBC_control)) * 100)
 
-    st.markdown(f"**Цель:** Снизить окисление после 30 дней хранения.")
+    st.markdown(get_text("oxidation_goal", lang_choice)) # ИСПРАВЛЕНО
     st.progress(reduction_pct / 100,
-                text=f"**{reduction_pct}% Снижение ТБЧ** (Окисления) при использовании 5% экстракта.")
-    st.caption(f"Снижение ТБЧ с {TBC_control} мг/кг (Контроль) до {TBC_extract} мг/кг (5% Экстракт) после 30 дней.")
-    st.success("Высокая антиокислительная устойчивость продукта достигнута.")
+                 text=f"**{reduction_pct}% {get_text('tba_reduction_text', lang_choice)}** "
+                      f"{get_text('tba_caption_extract', lang_choice)}.") # ИСПРАВЛЕНО
+    st.caption(f"{get_text('tba_caption', lang_choice)} {TBC_control} {get_text('mg_per_kg', lang_choice)} ({get_text('tba_caption_control', lang_choice)}) "
+                f"{get_text('tba_caption_to', lang_choice)} {TBC_extract} {get_text('mg_per_kg', lang_choice)} (5% {get_text('tba_caption_extract', lang_choice)}).")
+    st.success(get_text("oxidation_success", lang_choice)) # ИСПРАВЛЕНО
 
     st.markdown("---")
 
-    # 5. Анимацияланған "Мақсатты pH" картасы
-    st.subheader("🎯 Контроль pH: Целевой Диапазон")
+    # 5. Контроль pH
+    st.subheader(get_text("ph_title", lang_choice))
     current_ph = 5.35
     ph_min = 5.1
     ph_max = 5.6
 
     st.markdown(f"""
         <div style='text-align:center; padding: 20px; background-color: #2a2a2a; border-radius: 10px; border: 2px solid #333;'>
-            <h4 style='color:#f0f0f0;'>Текущий/Прогнозируемый pH: </h4>
+            <h4 style='color:#f0f0f0;'>{get_text('predicted_ph', lang_choice)}:</h4>
             <h1 style='color:#198754; font-size: 3em; animation: pulse 1s infinite;'>{current_ph:.2f}</h1>
-            <div class="small-muted">Оптимальный диапазон для безопасности и качества: <b>{ph_min:.1f} – {ph_max:.1f}</b></div>
+            <div class="small-muted">{get_text('ph_optimal', lang_choice)} <b>{ph_min:.1f} – {ph_max:.1f}</b></div>
         </div>
         """, unsafe_allow_html=True)
 
     if ph_min <= current_ph <= ph_max:
-        st.success("✅ **Статус:** pH находится в оптимальном диапазоне. Биохимический процесс идет корректно.")
+        st.success(get_text("ph_optimal", lang_choice))
     else:
-        st.warning("⚠️ **Статус:** pH вне оптимального диапазона. Требуется корректировка параметров соления.")
+        st.warning(get_text("ph_insufficient", lang_choice))
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 # =================================================================
-# PAGE: Процесс производства Жая (Өндіріс процесі) (ИЗ app1.py)
 # =================================================================
-elif page == L["menu"][1]:
+# PAGE: Процесс производства Жая / Production Process
+# =================================================================
+elif page == get_text("menu_production_process", lang_choice):
     st.markdown("<div class='fade-in'>", unsafe_allow_html=True)
-    st.title(" Технологическая карта производства Жая")
-    st.markdown("### Пошаговый контроль качества и параметры процесса (с учетом Экстракта и IoT)")
+    st.title(get_text("jaya_process_title", lang_choice))
+    st.markdown(get_text("jaya_process_subtitle", lang_choice))
 
-    # Кнопки с новым стилем/активным состоянием (CSS 6 и 7)
+    # Кнопки этапов (динамически локализованные)
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        if st.button("1. Приемка сырья 🥩", key='btn_priemka'):
+        if st.button(get_text("stage_priemka", lang_choice), key='btn_priemka'):
             st.session_state['active_stage_clean'] = 'priemka'
     with col2:
-        if st.button("2. Посол (Экстракт) 🧂", key='btn_posol'):  # Название изменено
+        if st.button(get_text("stage_posol", lang_choice), key='btn_posol'):
             st.session_state['active_stage_clean'] = 'posol'
     with col3:
-        if st.button("3. Термическая обработка 🔥", key='btn_termo'):
+        if st.button(get_text("stage_termo", lang_choice), key='btn_termo'):
             st.session_state['active_stage_clean'] = 'termokamera'
     with col4:
-        if st.button("4. Хранение (Срок годности) 📦", key='btn_upakovka'):  # Название изменено
+        if st.button(get_text("stage_upakovka", lang_choice), key='btn_upakovka'):
             st.session_state['active_stage_clean'] = 'upakovka'
 
     st.markdown("---")
     active_stage = st.session_state.get('active_stage_clean')
 
+    # --------------------------
+    # 1. Приемка
+    # --------------------------
     if active_stage == 'priemka':
-        st.header("1. Приемка и подготовка сырья")
-        with st.expander("Контрольные параметры приемки", expanded=True):
+        st.header(get_text("stage_priemka_header", lang_choice))
+        with st.expander(get_text("stage_priemka_expander", lang_choice), expanded=True):
             col_p1, col_p2, col_p3 = st.columns(3)
-            col_p1.metric(label="Начальная масса", value="1 кг")
-            col_p2.metric(label="Температура сырья", value="0-3°С", help="Контроль с помощью IoT-датчиков в камере.")
-            col_p3.metric(label="Начальный pH", value="6.5-6.8", help="Важно для прогноза созревания.")
-            st.markdown("#### Ключевые Технологические Показатели")
+            col_p1.metric(
+            label=get_text("metric_mass", lang_choice), 
+            value=f"1 {get_text('unit_kg', lang_choice)}",)
+            col_p2.metric(label=get_text("metric_temp", lang_choice), value="0-3°С", help=get_text("help_temp", lang_choice))
+            col_p3.metric(label=get_text("metric_ph", lang_choice), value="6.5-6.8", help=get_text("help_ph", lang_choice))
+            st.markdown(get_text("tech_params_title", lang_choice))
             col_kpi_a, col_kpi_b, col_kpi_c = st.columns(3)
-            col_kpi_a.metric(label="Выход продукции (Цель)", value="85%", delta="По ГОСТ")
-            col_kpi_b.metric(label="Целевая $t^{\circ}$ готовности", value="74°С", delta="Внутри продукта")
-            col_kpi_c.metric(label="Масса рассола (Потеря)", value="100 г", delta_color="off")
+            col_kpi_a.metric(label=get_text("metric_yield", lang_choice), value="85%", delta=get_text("delta_gost", lang_choice))
+            col_kpi_b.metric(label=get_text("metric_target_temp", lang_choice), value="74°С", delta=get_text("delta_inner", lang_choice))
+            col_kpi_c.metric(
+            label=get_text("metric_brine_loss", lang_choice), 
+            value=f"100 {get_text('unit_g', lang_choice)}", # ИСПРАВЛЕНО
+            delta_color="off",)
             st.markdown("---")
-            st.info("💡 **Цифровой контроль:** Автоматический учет массы и температуры сырья.")
+            st.info(get_text("digital_control_tip", lang_choice))
 
+    # --------------------------
+    # 2. Посол
+    # --------------------------
     elif active_stage == 'posol':
-        st.header("2. Посол, Экстракт облепихи и Массирование")
-        with st.expander("Подготовка рассола и шприцевание", expanded=True):
-            st.markdown(r"""
-            **Состав рассола:** 4,5 л $\text{H}_2\text{O}$ + 250 г $\text{NaCl}$ + 0,8 мг $\text{NaNO}_2$.
+        st.header(get_text("stage_posol_header", lang_choice))
+        with st.expander(get_text("stage_posol_expander1", lang_choice), expanded=True):
+            st.markdown(get_text("stage_posol_markdown1", lang_choice), unsafe_allow_html=True)
 
-            #### 🌿 Внедрение Экстракта Облепихи (Ключевой шаг)
-            * **Оптимальная концентрация:** **3% - 5%** от массы рассола. 
-            * **Рекомендация:** Для цельномышечной Жая предпочтительно **5%** (для максимальной антиокислительной защиты).
-            * **Функция:** Экстракт улучшает влагоудерживающую способность и действует как натуральный антиоксидант.
+        with st.expander(get_text("stage_posol_expander2", lang_choice), expanded=False):
+            st.markdown(get_text("stage_posol_markdown2", lang_choice))
 
-            * **Температура рассола:** **$16^{\circ}С$**
-            * **Укладка в рассол:** $\tau=72$ часа, $t=0-3^{\circ}С$. Давление $P=1200\text{ г} – 1250\text{ г}$ на 1000 г.
-            """)
-
-        with st.expander("Контроль и Мониторинг", expanded=False):
-            st.markdown("""
-            * **Контроль соли:** Использование **цифрового солемера (Солемер / Ареометр)** для проверки концентрации $\text{NaCl}$.
-            * **Контроль pH:** Ежедневный замер pH в рассоле для отслеживания динамики созревания (см. раздел "Моделирование pH").
-            """)
-
+    # --------------------------
+    # 3. Термообработка
+    # --------------------------
     elif active_stage == 'termokamera':
-        st.header("3. Термическая обработка (IoT-контроль)")
-        st.info("Термообработка включает 5 последовательных этапов. **Критическая точка: внутренняя $74^{\circ}С$.**")
+        st.header(get_text("stage_termo_header", lang_choice))
+        st.info(get_text("stage_termo_info", lang_choice))
 
         termoparameters = [
-            ("Сушка", "45°С", "20 мин", "Удаление поверхностной влаги."),
-            ("Обжарка", "75-85°С", "Внутренняя $\mathbf{60^{\circ}С}$", "Формирование цвета/аромата."),
-            ("Варка паром", "Камера $\mathbf{88^{\circ}С}$", "Внутренняя $\mathbf{74^{\circ}С}$",
-             "Достижение полной готовности (санитарная безопасность)."),
-            ("Сушка охлаждением", "Вентилятор", "10 мин", "Стабилизация температуры."),
-            ("Копчение", "30-33°С (Дым)", "1,5 часа", "Придание аромата (Коптильня $230^{\circ}С$).")
+            (get_text("termo_drying", lang_choice), "45°С", "20 мин", get_text("termo_drying_desc", lang_choice)),
+            (get_text("termo_frying", lang_choice), "75-85°С", get_text("termo_frying_crit", lang_choice), get_text("termo_frying_desc", lang_choice)),
+            (get_text("termo_steam", lang_choice), get_text("termo_steam_camtemp", lang_choice), get_text("termo_steam_inner", lang_choice),
+             get_text("termo_steam_desc", lang_choice)),
+            (get_text("termo_cool_dry", lang_choice), get_text("termo_cool_temp", lang_choice), "10 мин", get_text("termo_cool_desc", lang_choice)),
+            (get_text("termo_smoke", lang_choice), "30-33°С", "1.5 ч", get_text("termo_smoke_desc", lang_choice))
         ]
-        df_termo = pd.DataFrame(termoparameters, columns=["Этап", "Температура Камеры", "Время/Критерий", "Назначение"])
-        st.dataframe(df_termo.set_index('Этап'), width=800)
+        df_termo = pd.DataFrame(termoparameters, columns=[
+            get_text("col_stage", lang_choice),
+            get_text("col_temp", lang_choice),
+            get_text("col_time", lang_choice),
+            get_text("col_purpose", lang_choice)
+        ])
+        st.dataframe(df_termo.set_index(get_text("col_stage", lang_choice)), width=800)
 
         st.markdown("---")
-        st.markdown("""
-        **🌡️ IoT-Мониторинг:**
-        * **Датчики:** Использование беспроводных термодатчиков (IoT-зонд) внутри продукта для постоянного контроля достижения $74^{\circ}С$.
-        * **Управляющее воздействие:** Автоматическое отключение/переключение режима камеры при достижении заданной внутренней температуры.
-        """)
+        st.markdown(get_text("iot_monitoring_desc", lang_choice))
 
+    # --------------------------
+    # 4. Упаковка
+    # --------------------------
     elif active_stage == 'upakovka':
-        st.header("4. Упаковка и Срок Годности")
-        with st.expander("Обвалка, Упаковка и Хранение (Ключевые параметры)", expanded=True):
-            st.markdown("""
-            * **Охлаждение:** В холодильной камере $t=0-5^{\circ}С$ — $12$ часов.
-            * **Упаковка:** В вакуум-упаковочном автомате.
-            """)
+        st.header(get_text("stage_upakovka_header", lang_choice))
+        with st.expander(get_text("stage_upakovka_expander", lang_choice), expanded=True):
+            st.markdown(get_text("stage_upakovka_markdown1", lang_choice))
 
         st.markdown("---")
-        st.subheader("Сравнение сроков годности:")
+        st.subheader(get_text("shelf_life_comparison", lang_choice))
 
         col_s1, col_s2 = st.columns(2)
-        col_s1.metric(label="Срок годности (Стандарт, без экстракта)", value="30 суток", delta_color="off")
-        col_s2.metric(label="Срок годности (С 5% экстракта)", value="60 суток", delta="+30 дней (удвоение!)")
+        col_s1.metric(label=get_text("shelf_life_standard", lang_choice), value=get_text("shelf_life_std_value", lang_choice), delta_color="off")
+        col_s2.metric(label=get_text("shelf_life_extract", lang_choice), value=get_text("shelf_life_ext_value", lang_choice), delta=get_text("shelf_life_delta_value", lang_choice))
 
-        st.markdown("""
-        **Ключевой фактор:** Экстракт облепихи снижает перекисное число (TBC), что замедляет окисление жиров и позволяет увеличить срок годности.
-        """)
-        st.info(
-            "🔬 **Критический контроль при хранении:** Активность воды ($A_w$) **$0.88-0.90$** және температура **$0-5^{\circ}С$** диапазонында болуы керек.")
+        st.markdown(get_text("shelf_life_desc", lang_choice))
+        st.info(get_text("storage_tip", lang_choice))
 
     st.markdown("</div>", unsafe_allow_html=True)
 
+
 # =================================================================
-# PAGE: Регрессионные модели качества (Сапа регрессиялық модельдері) (ИЗ app1.py)
 # =================================================================
-elif page == L["menu"][2]:
+# PAGE: Регрессионные модели качества / Regression Quality Models
+# =================================================================
+elif page == get_text("menu_regression_models", lang_choice):
     st.markdown("<div class='fade-in'>", unsafe_allow_html=True)
-    st.title("📊 Регрессионные модели качества конечного продукта")
-    st.markdown("### Прогнозирование качества на основе технологических параметров")
+    st.title(get_text("regression_title", lang_choice))
+    st.markdown(get_text("regression_subtitle", lang_choice))
     st.markdown("---")
 
-    # 1. Влажность конечного продукта (W) (Өзгеріссіз)
-    st.header("1. Влажность конечного продукта ($W$)")
+    # -------------------------------
+    # 1. Влажность конечного продукта
+    # -------------------------------
+    st.header(get_text("reg_w_title", lang_choice))
     st.latex(r"W = 65.0 + 0.12 \cdot T - 0.05 \cdot H + 0.5 \cdot E")
+
     col_w1, col_w2, col_w3 = st.columns(3)
     with col_w1:
-        T = st.slider("Температура сушки (T), °C", min_value=20, max_value=35, value=25, step=1, key="w_T")
+        T = st.slider(get_text("reg_w_T", lang_choice), min_value=20, max_value=35, value=25, step=1, key="w_T")
     with col_w2:
-        H = st.slider("Продолжительность сушки (H), час", min_value=1.0, max_value=10.0, value=5.0, step=0.5, key="w_H")
+        H = st.slider(get_text("reg_w_H", lang_choice), min_value=1.0, max_value=10.0, value=5.0, step=0.5, key="w_H")
     with col_w3:
-        E = st.slider("Концентрация экстракта (E), %", min_value=0.0, max_value=5.0, value=3.0, step=0.5,
-                      key="w_E_model1")
+        E = st.slider(get_text("reg_w_E", lang_choice), min_value=0.0, max_value=5.0, value=3.0, step=0.5, key="w_E_model1")
+
     W_predicted = 65.0 + 0.12 * T - 0.05 * H + 0.5 * E
-    st.metric(label="Прогнозируемая Влажность (W), %", value=f"{W_predicted:.2f}",
-              delta=f"Разница от базового значения (65%): {W_predicted - 65.0:.2f} п.п.")
-    st.info("Добавление экстракта ($E$) положительно влияет на влагоудержание.")
+    st.metric(label=get_text("reg_w_metric", lang_choice), value=f"{W_predicted:.2f}",
+              delta=f"{get_text('reg_w_delta', lang_choice)} {W_predicted - 65.0:.2f} п.п.")
+    st.info(get_text("reg_w_info", lang_choice))
     st.markdown("---")
 
-    # 2. Активность воды (Aw) (Өзгеріссіз)
-    st.header("2. Активность воды ($A_w$)")
+    # -------------------------------
+    # 2. Активность воды
+    # -------------------------------
+    st.header(get_text("reg_aw_title", lang_choice))
     st.latex(r"A_w = 0.95 - 0.003 \cdot C - 0.005 \cdot T_s")
+
     col_a1, col_a2 = st.columns(2)
     with col_a1:
-        C = st.slider("Концентрация соли (C), %", min_value=2.0, max_value=6.0, value=4.0, step=0.2, key="a_C")
+        C = st.slider(get_text("reg_aw_C", lang_choice), min_value=2.0, max_value=6.0, value=4.0, step=0.2, key="a_C")
     with col_a2:
-        Ts = st.slider("Длительность соления (Ts), сут", min_value=1.0, max_value=7.0, value=3.0, step=0.5, key="a_Ts")
+        Ts = st.slider(get_text("reg_aw_Ts", lang_choice), min_value=1.0, max_value=7.0, value=3.0, step=0.5, key="a_Ts")
+
     Aw_predicted = 0.95 - 0.003 * C - 0.005 * Ts
-    st.metric(label="Прогнозируемая Активность воды ($A_w$)", value=f"{Aw_predicted:.3f}",
-              delta=f"Необходимо снизить на {Aw_predicted - 0.90:.3f} для достижения Aw ≤ 0.90" if Aw_predicted > 0.90 else "В пределах безопасной нормы")
-    st.success("Оптимальный $A_w$ (0.88-0.90) критичен для микробиологической безопасности.")
+    st.metric(label=get_text("reg_aw_metric", lang_choice), value=f"{Aw_predicted:.3f}",
+              delta=(get_text("reg_aw_delta_high", lang_choice) if Aw_predicted > 0.90 else get_text("reg_aw_delta_ok", lang_choice)))
+    st.success(get_text("reg_aw_info", lang_choice))
     st.markdown("---")
 
-    # 3. НОВЫЙ БЛОК: ЦВЕТОВАЯ СТАБИЛЬНОСТЬ
-    st.header("3. Цветовая стабильность ($\Delta E$)")
-    st.markdown("Моделирование изменения цвета в зависимости от экстракта и сушки (чем ниже $\Delta E$, тем лучше).")
+    # -------------------------------
+    # 3. Цветовая стабильность
+    # -------------------------------
+    st.header(get_text("reg_color_title", lang_choice))
+    st.markdown(get_text("reg_color_desc", lang_choice))
     st.latex(r"\Delta E = 1.80 - 0.20 \cdot E + 0.05 \cdot H")
 
     col_c1, col_c2 = st.columns(2)
     with col_c1:
-        E_color = st.slider("Концентрация экстракта (E), %", min_value=0.0, max_value=5.0, value=3.0, step=0.5,
-                            key="e_color")
+        E_color = st.slider(get_text("reg_color_E", lang_choice), min_value=0.0, max_value=5.0, value=3.0, step=0.5, key="e_color")
     with col_c2:
-        H_color = st.slider("Продолжительность сушки (H), час", min_value=2.0, max_value=10.0, value=5.0, step=0.5,
-                            key="h_color")
+        H_color = st.slider(get_text("reg_color_H", lang_choice), min_value=2.0, max_value=10.0, value=5.0, step=0.5, key="h_color")
 
     Delta_E_predicted = 1.80 - 0.20 * E_color + 0.05 * H_color
+    st.metric(label=get_text("reg_color_metric", lang_choice), value=f"{Delta_E_predicted:.2f}",
+              delta=get_text("reg_color_delta", lang_choice))
 
-    st.metric(label="Прогнозируемое изменение цвета ($\Delta E$)", value=f"{Delta_E_predicted:.2f}",
-              delta="Оптимальное значение $\Delta E < 2.0$")
     if Delta_E_predicted < 1.5:
-        st.success("✅ **Вывод:** Высокая цветовая стабильность.")
+        st.success(get_text("reg_color_result_good", lang_choice))
     elif Delta_E_predicted < 2.5:
-        st.warning("⚠️ **Вывод:** Цвет приемлемый, но может быть небольшое потемнение.")
+        st.warning(get_text("reg_color_result_warn", lang_choice))
     else:
-        st.error("❌ **Вывод:** Значительное изменение цвета. Слишком долгая сушка или другие факторы.")
-
+        st.error(get_text("reg_color_result_bad", lang_choice))
     st.markdown("---")
 
-    # 4. НОВЫЙ БЛОК: ОКИСЛИТЕЛЬНАЯ СТАБИЛЬНОСТЬ (ПЕРЕКИСНОЕ ЧИСЛО)
-    st.header("4. Окислительная стабильность (Перекисное число - $\text{TBC}$)")
-    st.markdown("Прогноз степени окисления продукта после 30 дней хранения.")
+    # -------------------------------
+    # 4. Окислительная стабильность (TBC)
+    # -------------------------------
+    st.header(get_text("reg_tbc_title", lang_choice))
+    st.markdown(get_text("reg_tbc_desc", lang_choice))
     st.latex(r"\text{TBC}_{30\text{д}} = 2.80 - 0.35 \cdot E - 0.10 \cdot S")
 
     col_t1, col_t2 = st.columns(2)
     with col_t1:
-        E_tbc = st.slider("Концентрация экстракта (E), %", min_value=0.0, max_value=5.0, value=3.0, step=0.5,
-                          key="e_tbc")
+        E_tbc = st.slider(get_text("reg_tbc_E", lang_choice), min_value=0.0, max_value=5.0, value=3.0, step=0.5, key="e_tbc")
     with col_t2:
-        S_tbc = st.slider("Концентрация соли (S), %", min_value=2.0, max_value=5.0, value=3.5, step=0.1, key="s_tbc")
+        S_tbc = st.slider(get_text("reg_tbc_S", lang_choice), min_value=2.0, max_value=5.0, value=3.5, step=0.1, key="s_tbc")
 
     TBC_predicted = 2.80 - 0.35 * E_tbc - 0.10 * S_tbc
-
-    st.metric(label="Прогнозируемое $\text{TBC}$ через 30 дней, мг/кг", value=f"{TBC_predicted:.2f}",
-              delta="Чем ниже, тем лучше (Цель $\text{TBC} < 1.5$)")
+    st.metric(label=get_text("reg_tbc_metric", lang_choice), value=f"{TBC_predicted:.2f}",
+              delta=get_text("reg_tbc_delta", lang_choice))
 
     if TBC_predicted < 1.0:
-        st.success("✅ **Вывод:** Отличная антиокислительная устойчивость, срок годности может быть продлен (60 дней).")
+        st.success(get_text("reg_tbc_result_good", lang_choice))
     elif TBC_predicted < 1.8:
-        st.warning("⚠️ **Вывод:** Хорошая стабильность, стандартный срок годности (30-45 дней) обеспечен.")
+        st.warning(get_text("reg_tbc_result_warn", lang_choice))
     else:
-        st.error(
-            "❌ **Вывод:** Высокий риск окисления, срок годности не более 30 дней. Рекомендуется увеличить экстракт.")
-
+        st.error(get_text("reg_tbc_result_bad", lang_choice))
     st.markdown("---")
 
-    # 5. Механическая прочность (ПРОЧНОСТЬ) (Өзгеріссіз)
-    st.header("5. Механическая прочность (формованные изделия)")
-    st.info("Модель описывает **плотность и упругость** продукта.")
+    # -------------------------------
+    # 5. Механическая прочность
+    # -------------------------------
+    st.header(get_text("reg_strength_title", lang_choice))
+    st.info(get_text("reg_strength_info", lang_choice))
 
-    with st.expander("🛠️ Интерактивный симулятор прочности", expanded=False):
+    with st.expander(get_text("reg_strength_expander", lang_choice), expanded=False):
         col_p_slider, col_v_slider = st.columns(2)
         with col_p_slider:
-            P_input = st.slider("Давление прессования ($P$), $кг/см^2$", min_value=0.5, max_value=2.0, value=1.0,
-                                step=0.1, key="p_pressure")
+            P_input = st.slider(get_text("reg_strength_P", lang_choice), min_value=0.5, max_value=2.0, value=1.0, step=0.1, key="p_pressure")
         with col_v_slider:
-            V_input = st.slider("Вязкость фарша ($V$), условные единицы", min_value=50, max_value=150, value=100,
-                                step=10, key="v_viscosity")
+            V_input = st.slider(get_text("reg_strength_V", lang_choice), min_value=50, max_value=150, value=100, step=10, key="v_viscosity")
 
-        # Используется функция из app1.py
         Prochnost_score = calculate_stability(P_input, V_input / 100)
-
-        st.metric(label="Индекс механической стабильности", value=f"{Prochnost_score:.2f}")
+        st.metric(label=get_text("reg_strength_metric", lang_choice), value=f"{Prochnost_score:.2f}")
 
         if Prochnost_score >= 25:
-            delta_text = "Оптимальная/Высокая прочность. Хорошее формование."
-            st.success(f"✅ {delta_text}")
+            st.success(get_text("reg_strength_result_good", lang_choice))
         elif Prochnost_score >= 15:
-            delta_text = "Средняя прочность. Приемлемо, но требует внимания к давлению."
-            st.warning(f"⚠️ {delta_text}")
+            st.warning(get_text("reg_strength_result_warn", lang_choice))
         else:
-            delta_text = "Низкая прочность. Риск деформации продукта."
-            st.error(f"❌ {delta_text}")
+            st.error(get_text("reg_strength_result_bad", lang_choice))
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-# =================================================================
-# PAGE: Моделирование pH (ИЗ app.py)
-# =================================================================
-elif page == L["menu"][3]:
-    st.title("🌡️ Моделирование pH в процессе посола")
-    st.markdown("### Прогноз кинетики кислотности для обеспечения безопасности")
-    with st.expander("ℹ️ Научное обоснование pH-моделирования", expanded=True):
-        st.write("""
-            **Биохимический смысл:** Снижение pH (повышение кислотности) в процессе созревания мяса — это ключевой фактор, влияющий на подавление нежелательной микрофлоры и формирование правильной текстуры и вкуса. Оно происходит в основном за счет ферментации углеводов (гликогена) до молочной кислоты стартовыми культурами и собственными ферментами мяса.
 
-            **Почему это важно:**
-            1.  **Безопасность:** Быстрое достижение pH ниже 5.6-5.8 ингибирует рост патогенных бактерий (E.coli, Salmonella).
-            2.  **Качество:** Оптимальный конечный pH (4.8-5.4) способствует влагоудержанию, нежности и формированию цвета.
-            3.  **Контроль:** Модель позволяет предсказать, достигнет ли продукт целевого pH за отведенное время при текущих параметрах (температура, соль, стартеры).
-        """)
+# =================================================================
+# PAGE: Моделирование pH 
+# =================================================================
+# PAGE: Моделирование pH в процессе посола / pH Modeling
+# =================================================================
+elif page == get_text("menu_ph_modeling", lang_choice):
+    st.markdown("<div class='fade-in'>", unsafe_allow_html=True)
+    st.title(get_text("ph_title", lang_choice))
+    st.markdown(f"### {get_text('ph_subtitle', lang_choice)}")
+
+    with st.expander(get_text("ph_basis", lang_choice), expanded=True):
+        st.write(get_text("ph_basis_text", lang_choice))
+
     st.markdown("---")
-    st.subheader("Формула кинетики pH (Подмодель соления)")
+    st.subheader(get_text("ph_formula_title", lang_choice))
     st.latex(r"pH(t) = pH_0 - (pH_0 - pH_{\infty}) \cdot (1 - e^{-k \cdot t})")
-    st.markdown("Где: pH_0 - начальное, pH_inf - конечное, k - константа скорости.")
-    st.warning("Значение k корректируется в зависимости от температуры/соления.")
+    st.markdown(get_text("ph_formula_desc", lang_choice))
+    st.warning(get_text("ph_formula_tip", lang_choice))
     st.markdown("---")
 
-
-    # Полиномиальная/логистическая модель — сохраняем и улучшаем
+    # --- Функция модели ---
     def ph_model_func(t, pH0=6.6, pH_inf=4.6, k=0.03):
-        # logistic-like approach: pH decreases from pH0 to pH_inf with rate k
         t = np.array(t, dtype=float)
         ph = pH_inf + (pH0 - pH_inf) * np.exp(-k * t)
-        # ensure numeric stability and realistic bounds
         ph = np.clip(ph, 0.0, 14.0)
         return ph
 
-
-    st.subheader("⚙️ Интерактивный прогноз и анализ")
-    # interactive params
+    # --- Интерактивный прогноз ---
+    st.subheader(get_text("ph_forecast_title", lang_choice))
     col_a, col_b, col_c = st.columns(3)
     with col_a:
-        pH0 = st.number_input("pH начальное (pH0)", value=6.6, format="%.2f")
+        pH0 = st.number_input(get_text("ph_initial", lang_choice), value=6.6, format="%.2f")
     with col_b:
-        pH_inf = st.number_input("pH конечное (pH_inf)", value=4.6, format="%.2f")
+        pH_inf = st.number_input(get_text("ph_final", lang_choice), value=4.6, format="%.2f")
     with col_c:
-        k = st.number_input("Константа скорости (k)", value=0.03, format="%.4f")
+        k = st.number_input(get_text("rate_constant", lang_choice), value=0.03, format="%.4f")
 
-    t_input = st.slider("Время прогноза (t), час", min_value=1, max_value=240, value=48, step=1)
+    t_input = st.slider(get_text("forecast_time", lang_choice),
+                        min_value=1, max_value=240, value=48, step=1)
     pH_forecast = float(ph_model_func(t_input, pH0=pH0, pH_inf=pH_inf, k=k))
-    st.metric(label="Прогнозируемый pH в заданное время", value=f"{pH_forecast:.2f}",
-              delta=f"Разница до целевого pH 5.6: {(pH_forecast - 5.6):.2f}", delta_color="inverse")
+
+    st.metric(label=get_text("predicted_ph", lang_choice),
+              value=f"{pH_forecast:.2f}",
+              delta=f"{get_text('delta_target_ph', lang_choice)} {(pH_forecast - 5.6):.2f}",
+              delta_color="inverse")
+
+    # --- Классификация диапазона ---
     if pH_forecast < 4.8:
-        st.error("**Критическое закисление.** Продукт слишком кислый.")
+        st.error(get_text("ph_critical_low", lang_choice))
     elif 4.8 <= pH_forecast <= 5.6:
-        st.success("**Оптимальный диапазон.**")
-    elif pH_forecast > 5.6:
-        st.warning("**Недостаточное закисление.**")
+        st.success(get_text("ph_optimal", lang_choice))
+    else:
+        st.warning(get_text("ph_insufficient", lang_choice))
 
     st.markdown("---")
-    st.subheader("Визуализация кинетики pH (используем plotly, клипируем вниз)")
+    st.subheader(get_text("ph_kinetics", lang_choice))
+
     times = np.linspace(0, 240, 300)
     pH_values = ph_model_func(times, pH0=pH0, pH_inf=pH_inf, k=k)
-    # plotly interactive
-    fig = px.line(x=times, y=pH_values, labels={'x': 'Время (ч)', 'y': 'pH'}, title='Кинетика pH в процессе посола')
-    # highlight target range
+
+    fig = px.line(
+        x=times,
+        y=pH_values,
+        labels={'x': get_text("time_hours", lang_choice), 'y': 'pH'},
+        title=get_text("ph_plot_title", lang_choice)
+    )
     fig.add_hrect(y0=4.8, y1=5.6, fillcolor="green", opacity=0.08, layer="below", line_width=0)
-    fig.add_vline(x=t_input, line_dash="dash", annotation_text=f"{t_input} ч", annotation_position="top right")
-    fig.update_yaxes(range=[0, 8])  # realistic pH focus
+    fig.add_vline(x=t_input, line_dash="dash",
+                  annotation_text=f"{t_input} {get_text('hours_short', lang_choice)}",
+                  annotation_position="top right")
+    fig.update_yaxes(range=[0, 8])
     st.plotly_chart(fig, use_container_width=True)
 
 
 # =================================================================
-# PAGE: Анализ с экстрактом облепихи (ИЗ app.py)
+# PAGE: Анализ с экстрактом облепихи 
 # =================================================================
-elif page == L["menu"][4]:
-    st.title("🔬 Влияние экстракта облепихи на качество жая и формованного мяса")
-    st.write("Результаты экспериментального исследования (на основе данных из Отчета).")
+# PAGE: Анализ с экстрактом облепихи
+# =================================================================
+elif page == get_text("menu_seabuckthorn_analysis", lang_choice):
+    st.markdown("<div class='fade-in'>", unsafe_allow_html=True)
+    st.title(get_text("seabuck_title", lang_choice))
+    st.write(get_text("seabuck_desc", lang_choice))
     st.markdown("---")
-    st.subheader("Таблица 1. Основные показатели копчёной жая (контроль и 5% экстракта)")
+
+    # Таблица 1
+    st.subheader(get_text("table1_title", lang_choice))
     table1_data = {
-        "Показатель": ["Массовая доля влаги, %", "Белок, %", "Жир, %",
-                       "Влагоудерж. способность (ВУС), %", "ТБЧ, мг/кг"],
-        "Контроль (0%)": [65.2, 21.2, 31.06, 60.2, 0.69],
-        "Жая + 5% экстракта": [67.8, 25.44, 33.4, 67.4, 0.96]
+        get_text("indicator", lang_choice): [
+            get_text("moisture", lang_choice),
+            get_text("protein", lang_choice),
+            get_text("fat", lang_choice),
+            get_text("vus", lang_choice),
+            get_text("tbch", lang_choice),
+        ],
+        get_text("control", lang_choice): [65.2, 21.2, 31.06, 60.2, 0.69],
+        get_text("with_extract_5", lang_choice): [67.8, 25.44, 33.4, 67.4, 0.96],
     }
     df_table1 = pd.DataFrame(table1_data)
     st.dataframe(df_table1)
-    st.subheader("Таблица 2. Основные показатели формованного мясного продукта (контроль и 3% экстракта)")
-    table2_data = {...} if False else {
-        "Показатель": ["Массовая доля влаги, %", "Белок, %", "Жир, %", "NaCl, %", "Зола, %"],
-        "Контроль (0%)": [68.96, 13.60, 11.03, 1.77, 2.96],
-        "Формованное мясо + 3% экстракта": [70.08, 13.88, 8.51, 1.27, 2.22]
+
+    # Таблица 2
+    st.subheader(get_text("table2_title", lang_choice))
+    table2_data = {
+        get_text("indicator", lang_choice): [
+            get_text("moisture", lang_choice),
+            get_text("protein", lang_choice),
+            get_text("fat", lang_choice),
+            get_text("salt", lang_choice),
+            get_text("ash", lang_choice),
+        ],
+        get_text("control", lang_choice): [68.96, 13.60, 11.03, 1.77, 2.96],
+        get_text("with_extract_3", lang_choice): [70.08, 13.88, 8.51, 1.27, 2.22],
     }
     df_table2 = pd.DataFrame(table2_data)
     st.dataframe(df_table2)
     st.markdown("---")
+
     col1, col2 = st.columns(2)
     x_ticks = np.arange(0, 15.1, 2.5)
+
     with col1:
-        st.subheader("Рис. 1. Влияние экстракта на влагосодержание жая")
+        st.subheader(get_text("fig1_title", lang_choice))
         x = np.array([0, 3, 5, 7, 9, 15])
         vlaga = np.array([65.2, 66.8, 68.9, 68.6, 67.8, 65.4])
-        fig1 = px.line(x=x, y=vlaga, markers=True, title="Влияние экстракта облепихи на влагосодержание жая")
+        fig1 = px.line(x=x, y=vlaga, markers=True,
+                       title=get_text("fig1_plot_title", lang_choice))
         fig1.update_xaxes(tickvals=x_ticks)
         st.plotly_chart(fig1, use_container_width=True)
-        st.subheader("Рис. 3. ВУС, ВСС и ЖУС копчёной жая")
+
+        st.subheader(get_text("fig3_title", lang_choice))
         VUS = np.array([60.2, 64.3, 67.4, 71.2, 73.5, 78.9])
         VSS = np.array([61.0, 65.5, 70.1, 73.8, 75.2, 77.4])
         ZhUS = np.array([60.0, 63.1, 66.8, 70.0, 72.5, 74.8])
-        fig3 = px.line(x=x, y=VUS, markers=True, title="ВУС, ВСС и ЖУС копчёной жая")
-        fig3.add_scatter(x=x, y=VUS, mode='lines+markers', name='ВУС, %')  # Добавил VUS
+        fig3 = px.line(x=x, y=VUS, markers=True,
+                       title=get_text("fig3_plot_title", lang_choice))
+        fig3.add_scatter(x=x, y=VUS, mode='lines+markers', name='ВУС, %')
         fig3.add_scatter(x=x, y=VSS, mode='lines+markers', name='ВСС, %')
         fig3.add_scatter(x=x, y=ZhUS, mode='lines+markers', name='ЖУС, %')
         fig3.update_xaxes(tickvals=x_ticks)
         st.plotly_chart(fig3, use_container_width=True)
-        st.subheader("Рис. 5. Окислительные показатели формованного мяса")
+
+        st.subheader(get_text("fig5_title", lang_choice))
         days2 = np.array([5, 10, 15])
         tbch_c2 = np.array([0.203, 0.284, 0.312])
         tbch_e2 = np.array([0.254, 0.366, 0.428])
         perox_c2 = np.array([13.27, 14.30, 15.21])
         perox_e2 = np.array([9.90, 10.80, 11.60])
-        fig5 = px.line(title="Окислительные показатели формованного мяса")
+        fig5 = px.line(title=get_text("fig5_plot_title", lang_choice))
         fig5.add_scatter(x=days2, y=tbch_c2, mode='lines+markers', name='ТБЧ контроль')
         fig5.add_scatter(x=days2, y=tbch_e2, mode='lines+markers', name='ТБЧ 3%')
         fig5.add_scatter(x=days2, y=perox_c2, mode='lines+markers', name='Перокс контроль')
         fig5.add_scatter(x=days2, y=perox_e2, mode='lines+markers', name='Перокс 3%')
         st.plotly_chart(fig5, use_container_width=True)
+
     with col2:
-        st.subheader("Рис. 2. Белок и жир в жая")
+        st.subheader(get_text("fig2_title", lang_choice))
         belok = np.array([21.2, 23.4, 25.4, 27.5, 29.8, 34.9])
         zhir = np.array([31.06, 32.4, 33.4, 37.1, 41.2, 45.0])
-        fig2 = px.line(title="Белок и жир в жая")
+        fig2 = px.line(title=get_text("fig2_plot_title", lang_choice))
         fig2.add_scatter(x=x, y=belok, mode='lines+markers', name='Белок, %')
         fig2.add_scatter(x=x, y=zhir, mode='lines+markers', name='Жир, %')
         fig2.update_xaxes(tickvals=x_ticks)
         st.plotly_chart(fig2, use_container_width=True)
-        st.subheader("Рис. 4. Окислительные показатели жая")
+
+        st.subheader(get_text("fig4_title", lang_choice))
         days = np.array([5, 10, 15])
         tbch_c = np.array([0.197, 0.376, 0.416])
         tbch_e = np.array([0.194, 0.361, 0.419])
         perox_c = np.array([17.96, 19.12, 20.25])
         perox_e = np.array([13.01, 14.40, 15.13])
-        fig4 = px.line(title="Окислительные показатели жая")
+        fig4 = px.line(title=get_text("fig4_plot_title", lang_choice))
         fig4.add_scatter(x=days, y=tbch_c, mode='lines+markers', name='ТБЧ контроль')
         fig4.add_scatter(x=days, y=tbch_e, mode='lines+markers', name='ТБЧ 3%')
         fig4.add_scatter(x=days, y=perox_c, mode='lines+markers', name='Перокс контроль')
         fig4.add_scatter(x=days, y=perox_e, mode='lines+markers', name='Перокс 3%')
         st.plotly_chart(fig4, use_container_width=True)
 
-# =================================================================
-# PAGE: Исследование данных (ИСПРАВЛЕНО)
-# =================================================================
-elif page == L["menu"][5]:
-    st.title("🗂️ Исследование исходных данных")
-    st.write("Выберите таблицу для просмотра.")
 
-    # Мы используем 'df_ph_raw' из глобальной загрузки данных
+# =================================================================
+# PAGE: Исследование данных 
+# =================================================================
+# PAGE: 🗂️ Исследование данных / Data Exploration
+# =================================================================
+elif page == get_text("menu_data_exploration", lang_choice):  # заменили L["menu"][5]
+    st.markdown("<div class='fade-in'>", unsafe_allow_html=True)
+    st.title(get_text("explore_title", lang_choice))
+    st.write(get_text("explore_desc", lang_choice))
+
+    # Используем глобальную переменную df_ph_raw
     df_to_use_for_ph = df_ph_raw
 
     if all_meat_data:
         available_tables = list(all_meat_data.keys())
 
-        # ИСПРАВЛЕНО ЗДЕСЬ
+        # Если есть данные по pH, добавляем как отдельный вариант
         if df_to_use_for_ph is not None:
             available_tables.append('opyty.xlsx')
 
-        choice = st.selectbox("Выберите данные:", available_tables)
-        st.markdown(f"**Просмотр данных из: `{choice}`**")
+        choice = st.selectbox(get_text("select_data", lang_choice), available_tables)
+        st.markdown(f"**{get_text('viewing_data', lang_choice)} `{choice}`**")
 
         if choice == 'opyty.xlsx':
-            # И ИСПРАВЛЕНО ЗДЕСЬ
             if df_to_use_for_ph is not None:
                 df_to_show = df_to_use_for_ph.copy()
             else:
@@ -1021,65 +1104,86 @@ elif page == L["menu"][5]:
 
         if 'Accuracy' in df_to_show.columns:
             df_to_show['Accuracy'] = pd.to_numeric(df_to_show['Accuracy'], errors='coerce')
+
         if not df_to_show.empty:
             st.dataframe(df_to_show)
         else:
-            st.warning(f"Данные для '{choice}' не были загружены или пусты.")
+            st.warning(f"{get_text('viewing_data', lang_choice)} '{choice}' — {get_text('data_empty_warning', lang_choice) if 'data_empty_warning' in L[lang_choice] else 'Данные не были загружены или пусты.'}")
     else:
-        st.warning("Не удалось загрузить данные для просмотра.")
+        st.warning(get_text("data_load_error", lang_choice) if "data_load_error" in L[lang_choice] else "Не удалось загрузить данные для просмотра.")
+
 
 # =================================================================
-# PAGE: История / DB (Тарих / DB) (ИЗ app1.py)
+# PAGE: История / DB (Тарих / DB) 
 # =================================================================
-elif page == L["menu"][6]:
+# PAGE: История / DB (Тарих / DB)
+# =================================================================
+elif page == get_text("menu_history_db", lang_choice):  # заменено с L["menu"][6]
     st.markdown("<div class='fade-in'>", unsafe_allow_html=True)
-    st.title("💾 История измерений и база данных")
-    st.markdown("### Все записи контрольных измерений pH и скоринга")
+
+    # Заголовок и описание
+    st.title(get_text("db_title", lang_choice))
+    st.markdown(f"### {get_text('db_desc', lang_choice)}")
 
     df_db = fetch_measurements()
 
     if df_db.empty:
-        st.info("База данных измерений пуста.")
+        st.info(get_text("history_empty", lang_choice))
     else:
-        st.subheader(f"Последние {len(df_db)} измерений")
+        st.subheader(f"{get_text('total_records', lang_choice)} {len(df_db)}")
         st.dataframe(df_db, use_container_width=True)
 
-        # График pH по времени
-        fig_db = px.line(df_db.sort_values('created_at'), x='created_at', y='ph', color='sample_name',
-                         title='Динамика pH измерений по времени', template='plotly_dark')
+        # 📈 График pH по времени
+        fig_db = px.line(
+            df_db.sort_values('created_at'),
+            x='created_at',
+            y='ph',
+            color='sample_name',
+            title=get_text("ph_over_time", lang_choice),
+            template='plotly_dark'
+        )
         st.plotly_chart(fig_db, use_container_width=True)
 
-        # Скачивание и удаление
+        # --- Экспорт и удаление
         st.markdown("---")
         col_dl, col_del = st.columns(2)
+
         with col_dl:
-            st.markdown(df_to_download_link(df_db, "measurements_export.csv"), unsafe_allow_html=True)
+            st.markdown(df_to_download_link(df_db, "measurements_export.csv", get_text("export_all", lang_choice)),
+                        unsafe_allow_html=True)
+
         with col_del:
-            if st.button("❌ Очистить всю базу данных", key="db_reset"):
+            if st.button(f"❌ {get_text('clear_all', lang_choice)}", key="db_reset"):
                 if st.session_state.get('confirm_reset', False):
                     delete_all_measurements()
                     st.session_state['confirm_reset'] = False
-                    st.success("База данных успешно очищена.")
+                    st.success(get_text("db_cleared", lang_choice))
                     st.experimental_rerun()
                 else:
                     st.session_state['confirm_reset'] = True
-                    st.warning(L["db_reset_confirm"])
-                    st.button("Подтвердить очистку", key="confirm_btn")
+                    st.warning(get_text("confirm_clear", lang_choice))
+                    st.button(get_text("confirm_clear", lang_choice), key="confirm_btn")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-# =================================================================
-# PAGE: ML: Train / Predict (ИЗ app.py)
-# =================================================================
-elif page == L["menu"][7]:
-    st.title("🧠 ML: Обучение и прогнозирование pH")
-    st.markdown(
-        "Загрузите CSV/Excel с колонкой 'pH' и признаками для обучения или загрузите CSV с признаками для предсказания.")
-    tab1, tab2 = st.tabs(["Train", "Predict"])
 
+# =================================================================
+# PAGE: ML: Train / Predict 
+# =================================================================
+# PAGE: ML: Train / Predict
+# =================================================================
+elif page == get_text("menu_ml_train_predict", lang_choice):  # заменено с L["menu"][7]
+    st.title(get_text("ml_title", lang_choice))
+    st.markdown(get_text("ml_desc", lang_choice))
+
+    tab1, tab2 = st.tabs([get_text("train_tab", lang_choice), get_text("predict_tab", lang_choice)])
+
+    # --- TAB 1: TRAIN --------------------------------------------------------
     with tab1:
-        st.subheader("Обучение модели")
-        up = st.file_uploader("CSV/Excel для обучения (колонка pH)", type=["csv", "xlsx", "xls"], key="train_up")
+        st.subheader(get_text("train_subtitle", lang_choice))
+        up = st.file_uploader(get_text("upload_train", lang_choice),
+                              type=["csv", "xlsx", "xls"], key="train_up")
+
         if up:
             try:
                 if up.name.lower().endswith(".csv"):
@@ -1087,30 +1191,41 @@ elif page == L["menu"][7]:
                 else:
                     df_train = pd.read_excel(up)
             except Exception as e:
-                st.error(f"Ошибка чтения: {e}")
+                st.error(f"{get_text('train_error', lang_choice)} {e}")
                 df_train = pd.DataFrame()
+
             if df_train.empty:
-                st.info("Нет данных")
+                st.info(get_text("no_data", lang_choice))
             else:
-                st.write("Превью:")
+                st.write(get_text("preview", lang_choice))
                 st.dataframe(df_train.head(10))
+
                 cols = df_train.columns.tolist()
                 if 'pH' in cols:
                     target = 'pH'
                 else:
-                    target = st.selectbox("Целевая колонка (pH) выберите:", options=cols)
-                features = st.multiselect("Признаки (если пусто — будут взяты все числовые кроме цели)", options=cols)
-                if st.button(L[lang_choice]["train_button"]):
+                    target = st.selectbox(get_text("target_column", lang_choice), options=cols)
+
+                features = st.multiselect(get_text("features", lang_choice), options=cols)
+
+                if st.button(get_text("train_button", lang_choice)):
                     try:
-                        metrics = ph_model.train(df_train, target=target, feature_cols=features if features else None)
-                        st.success("Обучение прошло успешно")
+                        metrics = ph_model.train(
+                            df_train,
+                            target=target,
+                            feature_cols=features if features else None
+                        )
+                        st.success(get_text("train_success", lang_choice))
                         st.json(metrics)
                     except Exception as e:
-                        st.error(f"Ошибка обучения: {e}")
+                        st.error(f"{get_text('train_error', lang_choice)} {e}")
 
+    # --- TAB 2: PREDICT -----------------------------------------------------
     with tab2:
-        st.subheader("Прогнозирование")
-        up2 = st.file_uploader("CSV для предсказания (те же признаки)", type=["csv"], key="pred_up")
+        st.subheader(get_text("predict_subtitle", lang_choice))
+        up2 = st.file_uploader(get_text("upload_predict", lang_choice),
+                               type=["csv"], key="pred_up")
+
         if up2:
             try:
                 df_pred = pd.read_csv(up2)
@@ -1120,51 +1235,58 @@ elif page == L["menu"][7]:
                 except Exception as e:
                     st.error(f"Ошибка чтения: {e}")
                     df_pred = pd.DataFrame()
+
             if df_pred.empty:
-                st.info("Нет данных")
+                st.info(get_text("no_data", lang_choice))
             else:
                 st.dataframe(df_pred.head(10))
                 num_cols = df_pred.select_dtypes(include=[np.number]).columns.tolist()
-                st.write("Автоматически выбранные числовые признаки:", num_cols)
-                if st.button(L[lang_choice]["predict_button"]):
+                st.write(f"{get_text('auto_features', lang_choice)} {num_cols}")
+
+                if st.button(get_text("predict_button", lang_choice)):
                     preds = ph_model.predict(df_pred, feature_cols=num_cols)
                     df_pred['predicted_pH'] = np.round(preds, 3)
-                    # Используется compute_score_from_ph (6.5) из app.py
                     df_pred['score'] = df_pred['predicted_pH'].apply(compute_score_from_ph)
-                    st.subheader("Результаты предсказания")
+
+                    st.subheader(get_text("predict_results", lang_choice))
                     st.dataframe(df_pred.head(50))
                     st.markdown(df_to_download_link(df_pred, filename="predictions.csv"), unsafe_allow_html=True)
-                    # опция: сохранить в историю, если есть колонка sample_name
+
+                    # --- Сохранение в базу, если есть sample_name
                     if 'sample_name' in df_pred.columns:
-                        if st.button("Сохранить предсказания в базу (sample_name -> sample)"):
+                        if st.button(get_text("save_to_db", lang_choice)):
                             saved = 0
                             for _, r in df_pred.iterrows():
-                                insert_measurement(str(r.get('sample_name', 'sample')),
-                                                   float(r.get('predicted_pH', np.nan)),
-                                                   compute_score_from_ph(float(r.get('predicted_pH', np.nan))),
-                                                   notes="predicted")
+                                insert_measurement(
+                                    str(r.get('sample_name', 'sample')),
+                                    float(r.get('predicted_pH', np.nan)),
+                                    compute_score_from_ph(float(r.get('predicted_pH', np.nan))),
+                                    notes="predicted"
+                                )
                                 saved += 1
-                            st.success(f"Сохранено {saved} записей в БД")
+                            st.success(f"{get_text('saved_records', lang_choice)} {saved}")
+
 
 # =====================================================================
-# PAGE: Ввод новых данных (ИЗ app.py)
+# PAGE: Ввод новых данных 
 # =====================================================================
-elif page == L["menu"][8]:
-    st.title("➕ Ввод новых данных о продукции")
-    st.markdown(f"### Добавление нового производственного цикла в базу данных ({MEAT_XLSX}, лист {SHEET_NAME})")
+# PAGE: Ввод новых данных / Input new data
+# =====================================================================
+elif page == get_text("menu_new_data_input", lang_choice):
+    st.title(get_text("input_title", lang_choice))
+    st.markdown(f"### {get_text('input_subtitle', lang_choice)} ({MEAT_XLSX}, {get_text('sheet', lang_choice)} {SHEET_NAME})")
 
-    # Загружаем текущие данные (используя safe_read_excel, определенную ранее)
+    # Загружаем текущие данные
     df_meat = safe_read_excel(MEAT_XLSX, SHEET_NAME)
 
     # Проверка наличия колонки BatchID
     if "BatchID" not in df_meat.columns:
-        st.error("❌ В листе T6 нет колонки 'BatchID'. Проверь структуру таблицы.")
+        st.error(get_text("batchid_missing", lang_choice))
         st.stop()
 
-    # Определяем следующий BatchID (Логика из app.py)
+    # Определяем следующий BatchID
     if len(df_meat) > 0 and df_meat["BatchID"].astype(str).str.match(r"^M\d+$").any():
-        last_id_str = df_meat[df_meat["BatchID"].astype(str).str.match(r"^M\d+$")]["BatchID"].dropna().astype(str).iloc[
-            -1]
+        last_id_str = df_meat[df_meat["BatchID"].astype(str).str.match(r"^M\d+$")]["BatchID"].dropna().astype(str).iloc[-1]
         try:
             last_num = int(last_id_str[1:])
             next_id = f"M{last_num + 1}"
@@ -1173,22 +1295,25 @@ elif page == L["menu"][8]:
     else:
         next_id = "M1"
 
+    # -------------------------------
+    # Форма добавления данных
+    # -------------------------------
     with st.form(key='batch_entry_form'):
-        st.subheader("Введите параметры нового производственного цикла")
+        st.subheader(get_text("batch_params", lang_choice))
 
-        st.text_input("Batch ID (автоматически)", value=next_id, disabled=True)
+        st.text_input(get_text("batch_id", lang_choice), value=next_id, disabled=True)
 
         col1, col2 = st.columns(2)
         with col1:
-            mass_kg = st.number_input("Масса партии (кг)", min_value=1.0, value=100.0, step=1.0)
-            T_initial_C = st.number_input("Начальная температура (°C)", min_value=-10.0, value=4.0, step=0.1)
-            Salt_pct = st.number_input("Содержание соли (%)", min_value=0.0, value=5.0, step=0.1)
+            mass_kg = st.number_input(get_text("mass", lang_choice), min_value=1.0, value=100.0, step=1.0)
+            T_initial_C = st.number_input(get_text("initial_temp", lang_choice), min_value=-10.0, value=4.0, step=0.1)
+            Salt_pct = st.number_input(get_text("salt_content", lang_choice), min_value=0.0, value=5.0, step=0.1)
         with col2:
-            Moisture_pct = st.number_input("Влажность (%)", min_value=0.0, value=75.0, step=0.1)
-            StarterCFU = st.number_input("Стартерная культура (КОЕ/г)", min_value=0, value=1000000, step=10000)
-            Extract_pct = st.number_input("Концентрация экстракта (%)", min_value=0.0, value=3.0, step=0.1)
+            Moisture_pct = st.number_input(get_text("moisture", lang_choice), min_value=0.0, value=75.0, step=0.1)
+            StarterCFU = st.number_input(get_text("starter_culture", lang_choice), min_value=0, value=1000000, step=10000)
+            Extract_pct = st.number_input(get_text("extract_content", lang_choice), min_value=0.0, value=3.0, step=0.1)
 
-        submitted = st.form_submit_button("💾 Сохранить данные")
+        submitted = st.form_submit_button(get_text("save_data", lang_choice))
 
         if submitted:
             new_row = {
@@ -1201,20 +1326,19 @@ elif page == L["menu"][8]:
                 "Extract_pct": Extract_pct
             }
             try:
-                # Используется append_row_excel, определенная ранее
                 append_row_excel(MEAT_XLSX, SHEET_NAME, new_row)
-                st.success(f"✅ Новая партия '{next_id}' успешно добавлена в лист '{SHEET_NAME}'!")
-                st.cache_data.clear()  # Очищаем кэш
-                load_all_data.clear()  # Очищаем кэш
+                st.success(f"{get_text('batch_added', lang_choice)}: '{next_id}'")
+                st.cache_data.clear()
+                load_all_data.clear()
             except Exception as e:
-                st.error(f"❌ Ошибка при записи в файл: {e}")
+                st.error(f"{get_text('save_error', lang_choice)} {e}")
 
     st.markdown("---")
-    st.subheader("📊 Текущие данные")
+    st.subheader(get_text("current_data", lang_choice))
     st.dataframe(safe_read_excel(MEAT_XLSX, SHEET_NAME), use_container_width=True)
+
 
 # ---------------------------
 # Footer
 # ---------------------------
-st.sidebar.markdown("---")
-st.sidebar.caption(L["version_note"])
+
