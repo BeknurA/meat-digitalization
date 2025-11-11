@@ -1,8 +1,11 @@
-# app.py
+# app.py - Главный файл с аутентификацией
 import streamlit as st
 from ui import get_text, LANG
-from pages.home   import show_home
-from pages.production  import show_production_process
+from auth import show_login_page, logout_user, check_permission, ROLES
+
+# Импорт всех страниц
+from pages.home import show_home
+from pages.production import show_production_process
 from pages.regression import show_regression_models
 from pages.ph_modeling import show_ph_modeling
 from pages.seabuckthorn import show_seabuckthorn_analysis
@@ -10,12 +13,19 @@ from pages.data_exploration import show_data_exploration
 from pages.history_db import show_history_db
 from pages.ml_training import show_ml_train_predict
 from pages.new_data_input import show_new_data_input
+from pages.dashboard import show_dashboard  # НОВОЕ
+from pages.reports import show_reports  # НОВОЕ
+from pages.admin import show_admin_panel  # НОВОЕ - Админ-панель
 
 # ---------------------------
 # Установки страницы
 # ---------------------------
-# Используем layout="wide" для лучшего вида, но главное - CSS
-st.set_page_config(page_title="Платформа Жая — расширенная", layout="wide")
+st.set_page_config(
+    page_title="Платформа Жая — Производство",
+    layout="wide",
+    page_icon="🐎",
+    initial_sidebar_state="expanded"
+)
 
 # =================================================================
 # 🎨 ENHANCED DESIGN AND ANIMATION - DARK THEME
@@ -24,17 +34,15 @@ st.markdown("""
 <style>
 /* 1. Global & Page Config */
 .stApp {
-    background-color: #111111; /* DARK/Black background */
-    color: #f0f0f0; /* Light text for general readability */
+    background-color: #111111;
+    color: #f0f0f0;
 }
-/* ... (весь остальной CSS код ) ... */
-/* Ensure all text within containers is readable */
-.st-emotion-cache-1n76c1k, [data-testid="stSidebar"] div, div[data-testid="stForm"] > div > label > div {
-    color: #f0f0f0 !important;
+
+/* Скрыть автоматическое меню */
+[data-testid="stSidebarNav"] {
+    display: none;
 }
-h1, h2, h3, h4, h5, h6, .stMarkdown, .stText {
-    color: #f0f0f0 !important;
-}
+
 /* 2. Fade-In Animation */
 .fade-in {
   animation: fadeIn ease 0.5s;
@@ -43,24 +51,15 @@ h1, h2, h3, h4, h5, h6, .stMarkdown, .stText {
   0% {opacity:0; transform:translateY(6px)}
   100% {opacity:1; transform:translateY(0)}
 }
-.small-muted {color: #a0a0a0; font-size:0.9em;}
-/* 3. Title Animation */
-.main-title-animation {
-    animation: pulseTitle 1.5s infinite alternate;
-    color: #4dc4ff; /* Accent Blue */
-    text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
-}
-@keyframes pulseTitle {
-    0% { transform: scale(1.0); opacity: 0.95; }
-    100% { transform: scale(1.005); opacity: 1.0; }
-}
-/* 4. Customizing Sidebar */
+
+/* 3. Sidebar */
 [data-testid="stSidebar"] {
     background-color: #1f1f1f;
     box-shadow: 2px 0px 8px rgba(0,0,0,0.5);
 }
-/* 5. Metric Cards Styling */
-[data-testid="stVerticalBlock"] > [style*="flex-direction: column"] > [data-testid="stMetric"] {
+
+/* 4. Metric Cards */
+[data-testid="stMetric"] {
     background-color: #2a2a2a;
     border-radius: 8px;
     padding: 15px;
@@ -69,43 +68,14 @@ h1, h2, h3, h4, h5, h6, .stMarkdown, .stText {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     transition: all 0.3s;
 }
-[data-testid="stVerticalBlock"] > [style*="flex-direction: column"] > [data-testid="stMetric"]:hover {
+
+[data-testid="stMetric"]:hover {
     transform: translateY(-3px);
     box-shadow: 0 8px 15px rgba(0, 0, 0, 0.6);
 }
-.stMetric .st-bd {
-    font-size: 2em !important;
-    font-weight: 700 !important;
-    color: #0d6efd; /* Accent Blue */
-}
-/* --- NEW CARD STYLE for Key Findings --- */
-.key-finding-card {
-    background-color: #2a2a2a;
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-    transition: transform 0.3s ease;
-    border: 1px solid #333;
-}
-.key-finding-card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
-}
-.key-finding-card h4 {
-    color: #4dc4ff !important;
-    font-size: 1.2em;
-    border-bottom: 2px solid #343a40;
-    padding-bottom: 5px;
-    margin-top: 0;
-}
-.key-value {
-    font-size: 2.2em;
-    font-weight: 700;
-    color: #198754; /* Green for success */
-}
-/* 6. Step Buttons Styling */
-.stButton button[key*="btn_"] {
+
+/* 5. Buttons */
+.stButton button {
     background-color: #495057;
     color: white;
     border-radius: 5px;
@@ -114,113 +84,192 @@ h1, h2, h3, h4, h5, h6, .stMarkdown, .stText {
     padding: 10px 15px;
     font-weight: 600;
 }
-.stButton button[key*="btn_"]:hover {
+
+.stButton button:hover {
     background-color: #6c757d;
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
-/* Highlight active button */
-.stButton button[aria-pressed="true"] {
-    background-color: #198754 !important;
-    border-color: #198754 !important;
-    box-shadow: 0 3px 6px rgba(25, 135, 84, 0.6) !important;
-}
-/* 7. pH Pulse Animation */
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+
+/* 6. Text colors */
+h1, h2, h3, h4, h5, h6, .stMarkdown, .stText {
+    color: #f0f0f0 !important;
 }
 
-/* 8. НОВЫЙ CSS: СКРЫТЬ АВТОМАТИЧЕСКОЕ МЕНЮ СТРАНИЦ */
-[data-testid="stSidebarNav"] {
-    display: none;
+/* 7. User badge in sidebar */
+.user-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    color: white;
+    text-align: center;
 }
 
+.user-role {
+    font-size: 0.85em;
+    opacity: 0.9;
+    margin-top: 5px;
+}
+
+.logout-btn {
+    margin-top: 10px;
+}
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------
-# UI: Main navigation
-# ---------------------------
-L = LANG
-lang_codes = list(L.keys())
-if not lang_codes:
-    lang_codes = ["ru"]
+# =================================================================
+# ПРОВЕРКА АУТЕНТИФИКАЦИИ
+# =================================================================
+if "user" not in st.session_state or not st.session_state.user.get("authenticated", False):
+    show_login_page()
+    st.stop()
 
+# =================================================================
+# ГЛАВНЫЙ ИНТЕРФЕЙС (после успешного входа)
+# =================================================================
+
+# Получение данных пользователя
+user = st.session_state.user
+user_role = user.get("role", "operator")
+lang_codes = list(LANG.keys())
+
+# Настройка языка
 _lang_name_map = {
     "ru": "Русский",
     "en": "English",
     "kk": "Қазақша",
 }
-lang_names = [ _lang_name_map.get(code, code) for code in lang_codes ]
-
-default_lang = "ru" if "ru" in lang_codes else lang_codes[0]
+lang_names = [_lang_name_map.get(code, code) for code in lang_codes]
 
 if "lang_choice" not in st.session_state:
-    st.session_state.lang_choice = default_lang
+    st.session_state.lang_choice = "ru"
 
-try:
-    current_index = lang_codes.index(st.session_state.lang_choice)
-except ValueError:
-    current_index = 0
+# ---------------------------
+# SIDEBAR: Профиль пользователя
+# ---------------------------
+with st.sidebar:
+    # Карточка пользователя
+    role_name = ROLES.get(user_role, {}).get("name", {}).get(st.session_state.lang_choice, user_role)
 
-# Элементы, которые ВЫ хотите видеть на боковой панели:
-# 1. Выбор языка
-selected_name = st.sidebar.selectbox("Язык / Language", lang_names, index=current_index)
+    st.markdown(f"""
+    <div class="user-badge">
+        <div style='font-size: 2em;'>👤</div>
+        <div style='font-weight: 600; font-size: 1.1em;'>{user.get('full_name', 'Пользователь')}</div>
+        <div class="user-role">{role_name}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
-selected_code = lang_codes[lang_names.index(selected_name)]
-st.session_state.lang_choice = selected_code
-lang_choice = st.session_state.lang_choice
+    # Выбор языка
+    try:
+        current_index = lang_codes.index(st.session_state.lang_choice)
+    except ValueError:
+        current_index = 0
 
-# 2. Заголовок и версия
-sidebar_container = st.sidebar.container()
-sidebar_container.markdown("<div class='fade-in'>", unsafe_allow_html=True)
-sidebar_container.title(get_text("title", lang_choice))
-sidebar_container.caption(get_text("version_note", lang_choice))
-sidebar_container.markdown("</div>", unsafe_allow_html=True)
+    selected_name = st.selectbox("🌐 Язык / Language", lang_names, index=current_index)
+    selected_code = lang_codes[lang_names.index(selected_name)]
+    st.session_state.lang_choice = selected_code
+    lang_choice = st.session_state.lang_choice
 
-# 3. Выбор раздела (Ваша кастомная навигация)
-page_options = [
-    get_text("menu_home", lang_choice),
-    get_text("menu_production_process", lang_choice),
-    get_text("menu_regression_models", lang_choice),
-    get_text("menu_ph_modeling", lang_choice),
-    get_text("menu_seabuckthorn_analysis", lang_choice),
-    get_text("menu_data_exploration", lang_choice),
-    get_text("menu_history_db", lang_choice),
-    get_text("menu_ml_train_predict", lang_choice),
-    get_text("menu_new_data_input", lang_choice),
-]
+    st.markdown("---")
 
-page = st.sidebar.radio(get_text("select_section", lang_choice), page_options, index=0)
+    # Навигация с учетом прав доступа
+    st.markdown("### 📂 Навигация")
 
-# (Остальной session_state и роутинг остаются без изменений)
-if 'selected_product_id' not in st.session_state:
-    st.session_state.selected_product_id = None
-if 'selected_step' not in st.session_state:
-    st.session_state.selected_step = None
-if 'active_stage_clean' not in st.session_state:
-    st.session_state['active_stage_clean'] = 'priemka'
+    # Базовые пункты меню (доступны всем)
+    page_options = []
+
+    # Dashboard - доступен всем
+    if check_permission(user_role, "view_dashboard"):
+        page_options.append(("🎯 Dashboard", "dashboard"))
+
+    # Главная страница
+    page_options.append((get_text("menu_home", lang_choice), "home"))
+
+    # Процесс производства
+    page_options.append((get_text("menu_production_process", lang_choice), "production"))
+
+    # Регрессионные модели
+    page_options.append((get_text("menu_regression_models", lang_choice), "regression"))
+
+    # pH моделирование
+    page_options.append((get_text("menu_ph_modeling", lang_choice), "ph_modeling"))
+
+    # Анализ облепихи
+    page_options.append((get_text("menu_seabuckthorn_analysis", lang_choice), "seabuckthorn"))
+
+    # Исследование данных
+    page_options.append((get_text("menu_data_exploration", lang_choice), "data_exploration"))
+
+    # История / БД (только для аналитиков и выше)
+    if check_permission(user_role, "view_history"):
+        page_options.append((get_text("menu_history_db", lang_choice), "history_db"))
+
+    # ML Train/Predict (только для аналитиков и админов)
+    if user_role in ["admin", "analyst"]:
+        page_options.append((get_text("menu_ml_train_predict", lang_choice), "ml_training"))
+
+    # Ввод новых данных (для операторов и менеджеров)
+    if check_permission(user_role, "edit_data"):
+        page_options.append((get_text("menu_new_data_input", lang_choice), "new_data_input"))
+
+    # Отчеты (для менеджеров и аналитиков)
+    if check_permission(user_role, "view_reports"):
+        page_options.append(("📊 Отчеты", "reports"))
+
+    # Отображение меню
+    page_labels = [item[0] for item in page_options]
+    page_keys = [item[1] for item in page_options]
+
+    if "selected_page" not in st.session_state:
+        st.session_state.selected_page = page_keys[0]
+
+    # Радио-кнопки для навигации
+    selected_label = st.radio(
+        "Выберите раздел:",
+        page_labels,
+        index=page_keys.index(st.session_state.selected_page) if st.session_state.selected_page in page_keys else 0
+    )
+
+    # Определение выбранной страницы
+    selected_index = page_labels.index(selected_label)
+    st.session_state.selected_page = page_keys[selected_index]
+
+    st.markdown("---")
+
+    # Системная информация
+    st.caption(f"🕒 Версия: 2.0 Production")
+    st.caption(f"📅 {user.get('username', 'user')}")
+
+    # Кнопка выхода
+    if st.button("🚪 Выйти из системы", key="logout_btn", use_container_width=True):
+        logout_user()
+        st.rerun()
 
 # =================================================================
-# Page Routing
+# РОУТИНГ СТРАНИЦ
 # =================================================================
-if page == get_text("menu_home", lang_choice):
+page = st.session_state.selected_page
+
+if page == "dashboard":
+    show_dashboard(lang_choice)
+elif page == "home":
     show_home(lang_choice)
-elif page == get_text("menu_production_process", lang_choice):
+elif page == "production":
     show_production_process(lang_choice)
-elif page == get_text("menu_regression_models", lang_choice):
+elif page == "regression":
     show_regression_models(lang_choice)
-elif page == get_text("menu_ph_modeling", lang_choice):
+elif page == "ph_modeling":
     show_ph_modeling(lang_choice)
-elif page == get_text("menu_seabuckthorn_analysis", lang_choice):
+elif page == "seabuckthorn":
     show_seabuckthorn_analysis(lang_choice)
-elif page == get_text("menu_data_exploration", lang_choice):
+elif page == "data_exploration":
     show_data_exploration(lang_choice)
-elif page == get_text("menu_history_db", lang_choice):
+elif page == "history_db":
     show_history_db(lang_choice)
-elif page == get_text("menu_ml_train_predict", lang_choice):
+elif page == "ml_training":
     show_ml_train_predict(lang_choice)
-elif page == get_text("menu_new_data_input", lang_choice):
+elif page == "new_data_input":
     show_new_data_input(lang_choice)
+elif page == "reports":
+    show_reports(lang_choice)
